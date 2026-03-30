@@ -22,4 +22,17 @@ public interface UserMissionRepository extends JpaRepository<UserMission, Long> 
     """)
     Optional<UserMission> findByUserUuidAndStampIdAndMissionId(
             @Param("uuid") String uuid, @Param("stampId") Long stampId, @Param("missionId") Long missionId);
+
+    @Query(
+            """
+        select um
+        from UserMission um
+        join um.stampUser su
+        join um.mission m
+        where su.member.id = :memberId
+          and su.stamp.id = :stampId
+          and m.id = :missionId
+    """)
+    Optional<UserMission> findByMemberIdAndStampIdAndMissionId(
+            @Param("memberId") Long memberId, @Param("stampId") Long stampId, @Param("missionId") Long missionId);
 }

@@ -7,33 +7,40 @@ import java.util.stream.Collectors;
 import jakarta.persistence.*;
 
 import com.halo.eventer.domain.member.Authority;
+import com.halo.eventer.domain.member.Member;
 import com.halo.eventer.domain.stamp.exception.UserMissionNotFoundException;
 import com.halo.eventer.global.common.BaseTime;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Table(
         name = "stamp_user",
         indexes = {
             @Index(name = "idx_uuid", columnList = "uuid"),
-            @Index(name = "idx_phone_name_stamp", columnList = "phone, name, stamp_id")
+            @Index(name = "idx_phone_name_stamp", columnList = "phone, name, stamp_id"),
+            @Index(name = "idx_member_stamp", columnList = "member_id, stamp_id")
         })
 public class StampUser extends BaseTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String uuid = UUID.randomUUID().toString();
+    @Column(unique = true)
+    private String uuid;
 
-    @Column(nullable = false)
+    // Legacy fields - nullable for Member-based users
     private String phone;
 
-    @Column(nullable = false)
     private String name;
+
+    // New: Member 연관관계 (null이면 레거시 사용자)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     private Boolean finished = false;
 
@@ -60,19 +67,33 @@ public class StampUser extends BaseTime {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, optional = true)
     private Custom custom;
 
+    // Legacy constructor
     public StampUser(String encryptedPhone, String encryptedName, int participantCount) {
+        this.uuid = UUID.randomUUID().toString();
         this.phone = encryptedPhone;
         this.name = encryptedName;
         this.finished = false;
         this.participantCount = participantCount;
     }
 
+    // Legacy constructor with extraText
     public StampUser(String encryptedPhone, String encryptedName, int participantCount, String extraText) {
+        this.uuid = UUID.randomUUID().toString();
         this.phone = encryptedPhone;
         this.name = encryptedName;
         this.finished = false;
         this.participantCount = participantCount;
         this.extraText = extraText;
+    }
+
+    // Member 기반 생성
+    public static StampUser createForMember(Member member, int participantCount, String extraText) {
+        StampUser stampUser = new StampUser();
+        stampUser.member = member;
+        stampUser.participantCount = participantCount;
+        stampUser.extraText = extraText;
+        stampUser.finished = false;
+        return stampUser;
     }
 
     //    public StampUser(String encryptedPhone, String encryptedName, int participantCount, String schoolNo) {

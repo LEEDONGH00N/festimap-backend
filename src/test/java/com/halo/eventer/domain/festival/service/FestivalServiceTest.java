@@ -19,6 +19,7 @@ import com.halo.eventer.domain.festival.exception.FestivalAlreadyExistsException
 import com.halo.eventer.domain.festival.exception.FestivalNotFoundException;
 import com.halo.eventer.domain.festival.repository.FestivalRepository;
 import com.halo.eventer.domain.image.dto.FileDto;
+import com.halo.eventer.domain.member.Member;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,11 +42,13 @@ public class FestivalServiceTest {
 
     private Festival festival;
     private FestivalCreateDto festivalCreateDto;
+    private Member owner;
 
     @BeforeEach
     void setUp() {
         festivalCreateDto = new FestivalCreateDto("축제", "univ");
         festival = Festival.from(festivalCreateDto);
+        owner = Member.createAgency("agency", "password", "test@test.com", "테스트회사", "홍길동", "대리", "01012345678");
     }
 
     @Test
@@ -56,7 +59,7 @@ public class FestivalServiceTest {
         given(festivalRepository.save(any())).willReturn(festival);
 
         // when
-        festivalService.create(festivalCreateDto);
+        festivalService.create(festivalCreateDto, owner);
 
         // then
         verify(festivalRepository, times(1))
@@ -70,7 +73,7 @@ public class FestivalServiceTest {
         given(festivalRepository.findByName(anyString())).willReturn(Optional.of(festival));
 
         // when & then
-        assertThatThrownBy(() -> festivalService.create(festivalCreateDto))
+        assertThatThrownBy(() -> festivalService.create(festivalCreateDto, owner))
                 .isInstanceOf(FestivalAlreadyExistsException.class);
     }
 
@@ -80,7 +83,7 @@ public class FestivalServiceTest {
         given(festivalRepository.findBySubAddress(anyString())).willReturn(Optional.of(festival));
 
         // when & then
-        assertThatThrownBy(() -> festivalService.create(festivalCreateDto))
+        assertThatThrownBy(() -> festivalService.create(festivalCreateDto, owner))
                 .isInstanceOf(FestivalAlreadyExistsException.class);
     }
 

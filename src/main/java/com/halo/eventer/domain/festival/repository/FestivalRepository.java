@@ -1,5 +1,6 @@
 package com.halo.eventer.domain.festival.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.halo.eventer.domain.festival.Festival;
+import com.halo.eventer.domain.member.Member;
 
 public interface FestivalRepository extends JpaRepository<Festival, Long> {
 
@@ -22,4 +24,8 @@ public interface FestivalRepository extends JpaRepository<Festival, Long> {
 
     @Query("SELECT f FROM Festival f " + "JOIN FETCH f.mapCategories m " + "WHERE f.id = :id ")
     Optional<Festival> findByIdWithMapCategories(@Param("id") Long id);
+
+    List<Festival> findByOwner(Member owner);
+
+    boolean existsByIdAndOwnerId(Long festivalId, Long ownerId);
 }

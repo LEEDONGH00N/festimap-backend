@@ -259,7 +259,7 @@ public class StampUserServiceTest {
     @Test
     void 사용자_미션_상태_업데이트_실패() {
         // given
-        StampUser emptyMissionStamp = new StampUser();
+        StampUser emptyMissionStamp = new StampUser("phone", "name", 1);
         given(stampUserRepository.findByUuid(anyString())).willReturn(Optional.of(emptyMissionStamp));
 
         // when & then

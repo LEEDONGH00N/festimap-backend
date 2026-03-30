@@ -149,11 +149,18 @@ public class JwtProvider {
     // Spring Security 인증과정에서 권한확인을 위한 기능
     public Authentication getAuthentication(String token) {
         String role = this.getRole(token);
+        String account = this.getAccount(token);
         UserDetails userDetails;
+
         if (role.equals("STAMP")) {
-            userDetails = customUserDetailService.loadUserByUuid(this.getAccount(token));
+            // STAMP 레거시: uuid로 조회 (하위 호환)
+            userDetails = customUserDetailService.loadUserByUuid(account);
+        } else if (role.equals("ROLE_VISITOR")) {
+            // VISITOR: memberId로 조회
+            userDetails = customUserDetailService.loadMemberById(Long.parseLong(account));
         } else {
-            userDetails = customUserDetailService.loadUserByUsername(this.getAccount(token));
+            // SUPER_ADMIN, AGENCY: loginId로 조회
+            userDetails = customUserDetailService.loadUserByUsername(account);
         }
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }

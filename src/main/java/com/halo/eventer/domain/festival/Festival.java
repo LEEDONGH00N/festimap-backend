@@ -7,11 +7,13 @@ import jakarta.persistence.*;
 import com.halo.eventer.domain.common.Address;
 import com.halo.eventer.domain.duration.Duration;
 import com.halo.eventer.domain.festival.dto.*;
+import com.halo.eventer.domain.festival.enums.FestivalStatus;
 import com.halo.eventer.domain.image.dto.FileDto;
 import com.halo.eventer.domain.inquiry.Inquiry;
 import com.halo.eventer.domain.lost_item.LostItem;
 import com.halo.eventer.domain.manager.Manager;
 import com.halo.eventer.domain.map.MapCategory;
+import com.halo.eventer.domain.member.Member;
 import com.halo.eventer.domain.missing_person.MissingPerson;
 import com.halo.eventer.domain.notice.Notice;
 import com.halo.eventer.domain.parking.ParkingManagement;
@@ -47,6 +49,16 @@ public class Festival {
 
     private double latitude; // 위도
     private double longitude; // 경도
+
+    private String programThumbnail; // 행사 대표 썸네일
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private FestivalStatus status = FestivalStatus.DRAFT;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private Member owner;
 
     @OneToMany(mappedBy = "festival", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<Notice> notices = new ArrayList<>();
@@ -145,5 +157,25 @@ public class Festival {
 
     public void updateSubdomain(String subdomain) {
         this.subAddress = subdomain;
+    }
+
+    public boolean isActive() {
+        return this.status == FestivalStatus.ACTIVE;
+    }
+
+    public void updateStatus(FestivalStatus status) {
+        this.status = status;
+    }
+
+    public void assignOwner(Member owner) {
+        this.owner = owner;
+    }
+
+    public boolean isOwnedBy(Long memberId) {
+        return this.owner != null && this.owner.getId().equals(memberId);
+    }
+
+    public void setProgramThumbnail(String thumbnail) {
+        this.programThumbnail = thumbnail;
     }
 }

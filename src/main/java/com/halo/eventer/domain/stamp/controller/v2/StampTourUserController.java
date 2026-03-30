@@ -15,6 +15,8 @@ import com.halo.eventer.domain.stamp.dto.stampUser.request.StampUserSignupReqDto
 import com.halo.eventer.domain.stamp.dto.stampUser.response.PrizeClaimQrResDto;
 import com.halo.eventer.domain.stamp.service.v2.StampTourUserService;
 import com.halo.eventer.global.security.CustomStampUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,10 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/user/festivals/{festivalId}/stamp-tours")
 @Slf4j
+@Tag(name = "스탬프 투어 사용자 (v2)", description = "스탬프 투어 사용자용 API (v2)")
 public class StampTourUserController {
 
     private final StampTourUserService stampTourUserService;
 
+    @Operation(summary = "회원가입", description = "스탬프 투어에 새로운 사용자로 회원가입합니다.")
     @PostMapping("/{stampId}/signup")
     public void stampUserSignup(
             @PathVariable @Min(1) long festivalId,
@@ -34,6 +38,7 @@ public class StampTourUserController {
         stampTourUserService.signup(festivalId, stampId, request);
     }
 
+    @Operation(summary = "로그인", description = "스탬프 투어에 로그인합니다.")
     @PostMapping("/{stampId}/login")
     public TokenDto login(
             @PathVariable @Min(1) long festivalId,
@@ -42,6 +47,7 @@ public class StampTourUserController {
         return stampTourUserService.login(festivalId, stampId, request);
     }
 
+    @Operation(summary = "미션 보드 조회", description = "사용자의 미션 보드를 조회합니다.")
     @GetMapping("/{stampId}/missions")
     public MissionBoardResDto getUserMissionBoard(
             @AuthenticationPrincipal CustomStampUserDetails userDetails,
@@ -50,6 +56,7 @@ public class StampTourUserController {
         return stampTourUserService.getMissionBoard(festivalId, stampId, userDetails.getUsername());
     }
 
+    @Operation(summary = "미션 상세 조회", description = "미션의 상세 정보를 조회합니다.")
     @GetMapping("/{stampId}/missions/{missionId}")
     public MissionTemplateResDto getMissionDetails(
             @AuthenticationPrincipal CustomStampUserDetails userDetails,
@@ -59,7 +66,7 @@ public class StampTourUserController {
         return stampTourUserService.getMissionsTemplate(festivalId, stampId, missionId, userDetails.getUsername());
     }
 
-    // TODO : QR 인증방식 변경 필요 : 토큰 방식 고려 중
+    @Operation(summary = "QR 미션 인증", description = "QR 코드로 미션을 인증합니다.")
     @PatchMapping("/{stampId}/verify/qr")
     public void successMissionVerifyByQr(
             @AuthenticationPrincipal CustomStampUserDetails userDetails,
@@ -69,6 +76,7 @@ public class StampTourUserController {
         stampTourUserService.successMissionByQr(festivalId, stampId, request.getMissionId(), userDetails.getUsername());
     }
 
+    @Operation(summary = "상품 수령 QR 조회", description = "상품 수령을 위한 QR 정보를 조회합니다.")
     @GetMapping("/{stampId}/prizes/qr")
     public PrizeClaimQrResDto getStampUserPrizeQrInfo(
             @AuthenticationPrincipal CustomStampUserDetails userDetails,

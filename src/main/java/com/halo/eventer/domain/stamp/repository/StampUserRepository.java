@@ -77,4 +77,24 @@ public interface StampUserRepository extends JpaRepository<StampUser, Long> {
           and s.id    = :stampId
         """)
     Optional<StampUser> findByUuidAndStampIdWithMissions(@Param("uuid") String uuid, @Param("stampId") Long stampId);
+
+    // Member 기반 조회 메서드
+    Optional<StampUser> findByMemberIdAndStampId(Long memberId, Long stampId);
+
+    boolean existsByMemberIdAndStampId(Long memberId, Long stampId);
+
+    List<StampUser> findAllByMemberId(Long memberId);
+
+    @Query(
+            """
+        select su
+        from StampUser su
+        join fetch su.stamp s
+        left join fetch su.userMissions um
+        left join fetch um.mission m
+        where su.member.id = :memberId
+          and s.id = :stampId
+        """)
+    Optional<StampUser> findByMemberIdAndStampIdWithMissions(
+            @Param("memberId") Long memberId, @Param("stampId") Long stampId);
 }

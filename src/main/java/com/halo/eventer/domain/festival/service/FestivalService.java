@@ -8,10 +8,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.halo.eventer.domain.festival.Festival;
 import com.halo.eventer.domain.festival.dto.*;
+import com.halo.eventer.domain.festival.enums.FestivalStatus;
 import com.halo.eventer.domain.festival.exception.FestivalAlreadyExistsException;
 import com.halo.eventer.domain.festival.exception.FestivalNotFoundException;
 import com.halo.eventer.domain.festival.repository.FestivalRepository;
 import com.halo.eventer.domain.image.dto.FileDto;
+import com.halo.eventer.domain.member.Member;
+import com.halo.eventer.domain.member.MemberRole;
+import com.halo.eventer.global.error.ErrorCode;
+import com.halo.eventer.global.error.exception.BaseException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,10 +28,12 @@ public class FestivalService {
     private final FestivalRepository festivalRepository;
 
     @Transactional
-    public void create(FestivalCreateDto festivalCreateDto) {
+    public void create(FestivalCreateDto festivalCreateDto, Member owner) {
         validateUniqueFestival(festivalCreateDto);
         Festival festival = Festival.from(festivalCreateDto);
         festival.applyDefaultMapCategory();
+        festival.assignOwner(owner);
+        festival.updateStatus(FestivalStatus.ACTIVE);
         festivalRepository.save(festival);
     }
 
@@ -107,6 +114,36 @@ public class FestivalService {
                         .findBySubAddress(festivalCreateDto.getSubDomain())
                         .isPresent()) {
             throw new FestivalAlreadyExistsException();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<FestivalSummaryDto> findFestivalsByMember(Member member) {
+        if (member.getRole() == MemberRole.SUPER_ADMIN) {
+            return findAll();
+        }
+        return festivalRepository.findByOwner(member).stream()
+                .map(FestivalSummaryDto::new)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void approveFestival(Long festivalId, Member admin) {
+        validateSuperAdmin(admin);
+        Festival festival = loadFestivalOrThrow(festivalId);
+        festival.updateStatus(FestivalStatus.ACTIVE);
+    }
+
+    @Transactional
+    public void updateFestivalStatus(Long festivalId, FestivalStatus status, Member admin) {
+        validateSuperAdmin(admin);
+        Festival festival = loadFestivalOrThrow(festivalId);
+        festival.updateStatus(status);
+    }
+
+    private void validateSuperAdmin(Member member) {
+        if (member.getRole() != MemberRole.SUPER_ADMIN) {
+            throw new BaseException(ErrorCode.UN_AUTHORIZED);
         }
     }
 }

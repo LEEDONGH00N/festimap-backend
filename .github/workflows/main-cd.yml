@@ -23,7 +23,7 @@
        - name: Create application.yml
          run: |
            mkdir -p src/main/resources
-           echo "${{ secrets.APP_DEVELOP_YML }}" > src/main/resources/application.yml
+           printf '%s' "${{ secrets.APP_DEVELOP_YML }}" > src/main/resources/application.yml
 
        - name: Set up Java
          uses: actions/setup-java@v4
